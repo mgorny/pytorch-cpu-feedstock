@@ -81,7 +81,6 @@ of 2024-11-28:
 |-----------|----------------|--------|-------------|-------------------------------------|
 | cuda      | 11.8/12.1/12.4 | 12.6   | 12.6        | `.ci/docker/build.sh`               |
 | magma     | 2.6.1          |        | 2.8.0       | `.ci/docker/common/instal_magma.sh` |
-| libabseil | not used?      |        | 20240722.0  |                                     |
 | libuv     |                |        | 1.49.2      | (not pinned)                        |
 | mkl       | 2024.2.0       |        | 2024.2.2    | `.ci/docker/common/install_mkl.sh`  |
 | nccl      | 2.21.5+        |        | 2.23.4.1    | `third_party/nccl/nccl`             |
@@ -89,7 +88,6 @@ of 2024-11-28:
 | sleef     | 3.6+           |        | 3.7         | `third_party/sleef`                 |
 | filelock  |                |        | 3.16.1      | (wheel metadata)                    |
 | fsspec    |                |        | 2024.10.0   | (wheel metadata)                    |
-| future    | not used?      |        | 1.0.0       |                                     |
 | jinja2    |                |        | 3.1.4       | (wheel metadata)                    |
 | networkx  |                |        | 3.4.2       | (wheel metadata)                    |
 | numpy     | (2.0.2 for build) | *   | 2.1.3       | `.ci/pytorch/build.sh`              |
