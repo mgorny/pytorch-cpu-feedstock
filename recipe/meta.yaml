@@ -129,7 +129,6 @@ requirements:
     - llvm-openmp    # [osx]
     - libprotobuf
     - sleef
-    - typing
     - libuv
     - pkg-config  # [unix]
     - typing_extensions
@@ -237,7 +236,6 @@ outputs:
         - llvm-openmp    # [osx]
         - libprotobuf
         - sleef
-        - typing
         - libuv
         - pkg-config  # [unix]
         - typing_extensions
