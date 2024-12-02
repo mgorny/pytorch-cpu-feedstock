@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "=== Building ${PKG_NAME} (magma: ${use_magma}; py: ${PY_VER}) ==="
+
 set -ex
 
 # https://github.com/conda-forge/pytorch-cpu-feedstock/issues/243
@@ -181,6 +183,7 @@ elif [[ ${cuda_compiler_version} != "None" ]]; then
     export USE_STATIC_NCCL=0
     export USE_STATIC_CUDNN=0
     export MAGMA_HOME="${PREFIX}"
+    export USE_MAGMA=${use_magma}
 else
     if [[ "$target_platform" != *-64 ]]; then
       # Breakpad seems to not work on aarch64 or ppc64le
@@ -193,34 +196,51 @@ else
     export USE_CUDA=0
 fi
 
+if [[ ${PKG_NAME} == libtorch-split && -f build/CMakeCache.txt ]]; then
+  # make sure to keep the exports the same and instead edit CMakeCache.txt
+  # otherwise, we're going to have complete libtorch rebuild
+  if [[ ${use_magma} == true ]]; then
+    export USE_MAGMA=false
+  else
+    export USE_MAGMA=true
+  fi
+  sed -i -e "/USE_MAGMA/s:=.*:=${use_magma}:" build/CMakeCache.txt
+fi
+
 echo '${CXX}'=${CXX}
 echo '${PREFIX}'=${PREFIX}
 $PREFIX/bin/python -m pip $PIP_ACTION . --no-deps -vvv --no-clean \
     | sed "s,${CXX},\$\{CXX\},g" \
     | sed "s,${PREFIX},\$\{PREFIX\},g"
 
-if [[ "$PKG_NAME" == "libtorch" ]]; then
-  mkdir -p $SRC_DIR/dist
-  pushd $SRC_DIR/dist
-  wheel unpack ../torch-*.whl
-  pushd torch-*
-  mv torch/bin/* ${PREFIX}/bin
-  mv torch/lib/* ${PREFIX}/lib
-  mv torch/share/* ${PREFIX}/share
-  for f in ATen caffe2 tensorpipe torch c10; do
-    mv torch/include/$f ${PREFIX}/include/$f
-  done
-  rm ${PREFIX}/lib/libtorch_python.*
-  popd
-  popd
+case ${PKG_NAME} in
+  libtorch-split)
+    mkdir -p $SRC_DIR/dist
+    pushd $SRC_DIR/dist
+    wheel unpack ../torch-*.whl
+    pushd torch-*
+    mv torch/bin/* ${PREFIX}/bin
+    mv torch/lib/* ${PREFIX}/lib
+    mv torch/share/* ${PREFIX}/share
+    for f in ATen caffe2 tensorpipe torch c10; do
+      mv torch/include/$f ${PREFIX}/include/$f
+    done
+    rm ${PREFIX}/lib/libtorch_python.*
+    popd
+    popd
 
-  # Keep the original backed up to sed later
-  cp build/CMakeCache.txt build/CMakeCache.txt.orig
-else
-  # Keep this in ${PREFIX}/lib so that the library can be found by
-  # TorchConfig.cmake.
-  # With upstream non-split build, `libtorch_python.so`
-  # and TorchConfig.cmake are both in ${SP_DIR}/torch/lib and therefore
-  # this is not needed.
-  mv ${SP_DIR}/torch/lib/libtorch_python${SHLIB_EXT} ${PREFIX}/lib
-fi
+    # Keep the original backed up to sed later
+    cp build/CMakeCache.txt build/CMakeCache.txt.orig
+    ;;
+  pytorch)
+    # Keep this in ${PREFIX}/lib so that the library can be found by
+    # TorchConfig.cmake.
+    # With upstream non-split build, `libtorch_python.so`
+    # and TorchConfig.cmake are both in ${SP_DIR}/torch/lib and therefore
+    # this is not needed.
+    mv ${SP_DIR}/torch/lib/libtorch_python${SHLIB_EXT} ${PREFIX}/lib
+    ;;
+  *)
+    echo "Unknown package name, edit build.sh"
+    exit 1
+esac
