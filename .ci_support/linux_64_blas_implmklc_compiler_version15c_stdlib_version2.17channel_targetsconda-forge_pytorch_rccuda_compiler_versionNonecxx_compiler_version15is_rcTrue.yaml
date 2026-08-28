@@ -30,14 +30,8 @@ is_rc:
 - 'True'
 libabseil:
 - '20260526'
-libblas:
-- 3.9.* *netlib
-libcblas:
-- 3.9.* *netlib
 libcudnn_dev:
 - '9'
-liblapack:
-- 3.9.* *netlib
 libmagma_devel:
 - 2.10.0
 libmagma_sparse:
