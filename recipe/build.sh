@@ -297,11 +297,16 @@ case ${PKG_NAME} in
   libtorch)
     # Call setup.py directly to avoid spending time on unnecessarily
     # packing and unpacking the wheel.
-    if [[ "$target_platform" == linux-* ]]; then
+    if [[ "${cuda_compiler_version}" != "None" ]]; then
         # filter out extremely noisy ptxas advisories
-        $PREFIX/bin/python setup.py -q build | stdbuf -oL grep -vE "Advisory: Modifier '\.sp::ordered_metadata'"
+        $PREFIX/bin/python -m pip install -e . --no-deps --no-build-isolation -v --no-clean \
+            | sed "s,${CXX},\$\{CXX\},g" \
+            | sed "s,${PREFIX},\$\{PREFIX\},g" \
+            | stdbuf -oL grep -vE "Advisory: Modifier '\.sp::ordered_metadata'"
     else
-        $PREFIX/bin/python setup.py -q build
+        $PREFIX/bin/python -m pip install -e . --no-deps --no-build-isolation -v --no-clean \
+            | sed "s,${CXX},\$\{CXX\},g" \
+            | sed "s,${PREFIX},\$\{PREFIX\},g"
     fi
 
     mv build/lib.*/torch/bin/* ${PREFIX}/bin/
@@ -325,7 +330,7 @@ case ${PKG_NAME} in
 
     ;;
   pytorch)
-    $PREFIX/bin/python -m pip install . --no-deps --no-build-isolation -v --no-clean --config-settings=--global-option=-q \
+    $PREFIX/bin/python -m pip install . --no-deps --no-build-isolation -v --no-clean \
         | sed "s,${CXX},\$\{CXX\},g" \
         | sed "s,${PREFIX},\$\{PREFIX\},g"
     # Keep this in ${PREFIX}/lib so that the library can be found by
